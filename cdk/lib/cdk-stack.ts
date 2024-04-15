@@ -25,8 +25,14 @@ export class CdkStack extends cdk.Stack {
     });
     albSg.addIngressRule(ec2.Peer.ipv4("0.0.0.0/0"), ec2.Port.tcp(80));
 
+    // Appコンテナ用のセキュリティグループ
     const containerSg = new ec2.SecurityGroup(this, "ContainerSg", { vpc });
-    albSg.connections.allowTo(containerSg, ec2.Port.tcp(3000));
+    albSg.connections.allowTo(containerSg, ec2.Port.tcp(3000)); // ALBからの接続は許可
+
+    // InternalAppコンテナ用のセキュリティグループ
+    const internalContainerSg = new ec2.SecurityGroup(this, "InternalContainerSg", { vpc });
+    albSg.connections.allowTo(internalContainerSg, ec2.Port.tcp(3000)); // ALBからの接続は許可
+    containerSg.connections.allowTo(internalContainerSg, ec2.Port.tcp(3000)); // Appコンテナからの接続は許可
 
     // ALB
     const alb = new elbv2.ApplicationLoadBalancer(this, "Alb", {
@@ -160,6 +166,10 @@ export class CdkStack extends cdk.Stack {
     new ssm.StringParameter(this, "ContainerSgParam", {
       parameterName: "/ecs/next-js-cdk/sg-id",
       stringValue: containerSg.securityGroupId,
+    });
+    new ssm.StringParameter(this, "InternalContainerSgParam", {
+      parameterName: "/ecs/next-js-cdk/internal-sg-id",
+      stringValue: internalContainerSg.securityGroupId,
     });
     new ssm.StringParameter(this, "ContainerTgParam", {
       parameterName: "/ecs/next-js-cdk/tg-arn",
