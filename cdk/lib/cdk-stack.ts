@@ -167,7 +167,8 @@ export class CdkStack extends cdk.Stack {
 
     // ECR
     const repository = new Repository(this, "Repository", {
-      removalPolicy: RemovalPolicy.DESTROY
+      removalPolicy: RemovalPolicy.DESTROY,
+      emptyOnDelete: true,
     });
     new CfnOutput(this, "RepositoryURI", {
       value: repository.repositoryUri,
