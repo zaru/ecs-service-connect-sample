@@ -24,6 +24,7 @@
       },
       "portMappings": [
         {
+          "name": "next-js",
           "containerPort": 3000,
           "hostPort": 3000,
           "protocol": "tcp"

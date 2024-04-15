@@ -27,7 +27,8 @@
           "name": "internal-next-js",
           "containerPort": 3000,
           "hostPort": 3000,
-          "protocol": "tcp"
+          "protocol": "tcp",
+          "appProtocol": "http"
         }
       ],
       "secrets": [
@@ -36,7 +37,7 @@
   ],
   "cpu": "256",
   "executionRoleArn": "{{ ssm `/ecs/next-js-cdk/task-exec-role` }}",
-  "family": "internal-next-js-cdk",
+  "family": "internal-next-js-cdk2",
   "memory": "512",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],

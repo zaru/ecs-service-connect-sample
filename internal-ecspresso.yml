@@ -1,6 +1,6 @@
 region: ap-northeast-1
 cluster: NextJsCluster
-service: InternalNextJsService
+service: InternalNextJsService2
 service_definition: internal-ecs-service-def.json
 task_definition: internal-ecs-task-def.json
 timeout: "10m0s"
