@@ -111,6 +111,27 @@ export class CdkStack extends cdk.Stack {
     // タスクロール
     const taskRole = new Role(this, "TaskRole", {
       assumedBy: new ServicePrincipal("ecs-tasks.amazonaws.com"),
+      inlinePolicies: {
+        inlinePolicies: PolicyDocument.fromJson({
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Action: [
+                "logs:CreateLogStream",
+                "logs:CreateLogGroup",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel"
+              ],
+              Resource: ["*"],
+            },
+          ],
+        }),
+      },
     });
 
     // タスク実行ロール
@@ -127,7 +148,13 @@ export class CdkStack extends cdk.Stack {
           Statement: [
             {
               Effect: "Allow",
-              Action: "secretsmanager:GetSecretValue",
+              Action: [
+                "secretsmanager:GetSecretValue",
+                "logs:CreateLogStream",
+                "logs:CreateLogGroup",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
               Resource: ["*"],
             },
           ],
