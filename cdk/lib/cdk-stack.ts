@@ -57,9 +57,10 @@ export class CdkStack extends cdk.Stack {
         healthyHttpCodes: "200",
         healthyThresholdCount: 2,
         unhealthyThresholdCount: 2,
-        interval: Duration.seconds(10),
-        timeout: Duration.seconds(5),
+        interval: Duration.seconds(5),
+        timeout: Duration.seconds(3),
       },
+      deregistrationDelay: Duration.seconds(5),
       vpc,
     });
     const internalContainerTg = new elbv2.ApplicationTargetGroup(this, "InternalContainerTg", {
@@ -72,9 +73,10 @@ export class CdkStack extends cdk.Stack {
         healthyHttpCodes: "200",
         healthyThresholdCount: 2,
         unhealthyThresholdCount: 2,
-        interval: Duration.seconds(10),
-        timeout: Duration.seconds(5),
+        interval: Duration.seconds(5),
+        timeout: Duration.seconds(3),
       },
+      deregistrationDelay: Duration.seconds(5),
       vpc,
     });
 
@@ -90,7 +92,7 @@ export class CdkStack extends cdk.Stack {
 
     internalAlb.addListener("InternalListener-HTTPS", {
       defaultTargetGroups: [internalContainerTg],
-      open: false,
+      open: true,
       port: 80,
     });
     new CfnOutput(this, "InternalALBLoadBalancerDnsName", {
