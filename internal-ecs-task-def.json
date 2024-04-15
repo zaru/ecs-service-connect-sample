@@ -1,0 +1,44 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "nextjs",
+      "image": "{{ ssm `/ecs/next-js-cdk/ecr-repository-name` }}:latest",
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "ap-northeast-1"
+        },
+        {
+          "name": "TZ",
+          "value": "Asia/Tokyo"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "{{ ssm `/ecs/next-js-cdk/log-group-name` }}",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "portMappings": [
+        {
+          "name": "internal-next-js",
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "secrets": [
+      ]
+    }
+  ],
+  "cpu": "256",
+  "executionRoleArn": "{{ ssm `/ecs/next-js-cdk/task-exec-role` }}",
+  "family": "internal-next-js-cdk",
+  "memory": "512",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "taskRoleArn": "{{ ssm `/ecs/next-js-cdk/task-role` }}"
+}

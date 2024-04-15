@@ -1,0 +1,35 @@
+{
+  "deploymentConfiguration": {
+    "deploymentCircuitBreaker": {
+      "enable": false,
+      "rollback": false
+    },
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 100
+  },
+  "desiredCount": 1,
+  "enableECSManagedTags": false,
+  "healthCheckGracePeriodSeconds": 0,
+  "launchType": "FARGATE",
+  "loadBalancers": [
+    {
+      "containerName": "nextjs",
+      "containerPort": 3000,
+      "targetGroupArn": "{{ ssm `/ecs/next-js-cdk/internal-tg-arn` }}"
+    }
+  ],
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "securityGroups": ["{{ ssm `/ecs/next-js-cdk/sg-id` }}"],
+      "subnets": [
+        "{{ ssm `/ecs/next-js-cdk/subnet-id-0` }}",
+        "{{ ssm `/ecs/next-js-cdk/subnet-id-1` }}"
+      ]
+    }
+  },
+  "placementConstraints": [],
+  "placementStrategy": [],
+  "platformVersion": "LATEST",
+  "schedulingStrategy": "REPLICA",
+  "serviceRegistries": []
+}

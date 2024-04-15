@@ -1,0 +1,9 @@
+region: ap-northeast-1
+cluster: NextJsCluster
+service: InternalNextJsService
+service_definition: internal-ecs-service-def.json
+task_definition: internal-ecs-task-def.json
+timeout: "10m0s"
+plugins:
+  - name: secretsmanager
+  - name: ssm
