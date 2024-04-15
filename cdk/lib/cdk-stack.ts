@@ -34,6 +34,11 @@ export class CdkStack extends cdk.Stack {
       internetFacing: true,
       securityGroup: albSg,
     });
+    const internalAlb = new elbv2.ApplicationLoadBalancer(this, "InternalAlb", {
+      vpc,
+      internetFacing: false,
+      securityGroup: albSg,
+    });
 
     // ターゲットグループ
     const containerTg = new elbv2.ApplicationTargetGroup(this, "ContainerTg", {
@@ -42,7 +47,22 @@ export class CdkStack extends cdk.Stack {
       protocol: elbv2.ApplicationProtocol.HTTP,
       // ヘルスチェックをカスタマイズする
       healthCheck: {
-        path: "/api/health",
+        path: "/api",
+        healthyHttpCodes: "200",
+        healthyThresholdCount: 2,
+        unhealthyThresholdCount: 2,
+        interval: Duration.seconds(10),
+        timeout: Duration.seconds(5),
+      },
+      vpc,
+    });
+    const internalContainerTg = new elbv2.ApplicationTargetGroup(this, "InternalContainerTg", {
+      targetType: elbv2.TargetType.IP,
+      port: 3000,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      // ヘルスチェックをカスタマイズする
+      healthCheck: {
+        path: "/api",
         healthyHttpCodes: "200",
         healthyThresholdCount: 2,
         unhealthyThresholdCount: 2,
@@ -62,10 +82,22 @@ export class CdkStack extends cdk.Stack {
       value: alb.loadBalancerDnsName,
     });
 
+    internalAlb.addListener("InternalListener-HTTPS", {
+      defaultTargetGroups: [internalContainerTg],
+      open: false,
+      port: 80,
+    });
+    new CfnOutput(this, "InternalALBLoadBalancerDnsName", {
+      value: internalAlb.loadBalancerDnsName,
+    });
+
     // ECSクラスタ
-    const cluster = new Cluster(this, "EcsCluster", {
+    new Cluster(this, "EcsCluster", {
       vpc,
       clusterName: "NextJsCluster",
+      defaultCloudMapNamespace: {
+        name: "NextJsSandbox",
+      }
     });
 
     // タスクロール
@@ -132,6 +164,10 @@ export class CdkStack extends cdk.Stack {
     new ssm.StringParameter(this, "ContainerTgParam", {
       parameterName: "/ecs/next-js-cdk/tg-arn",
       stringValue: containerTg.targetGroupArn,
+    });
+    new ssm.StringParameter(this, "InternalContainerTgParam", {
+      parameterName: "/ecs/next-js-cdk/internal-tg-arn",
+      stringValue: internalContainerTg.targetGroupArn,
     });
     new ssm.StringParameter(this, "LogGroupParam", {
       parameterName: "/ecs/next-js-cdk/log-group-name",
