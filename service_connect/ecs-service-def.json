@@ -1,0 +1,41 @@
+{
+  "deploymentConfiguration": {
+    "deploymentCircuitBreaker": {
+      "enable": false,
+      "rollback": false
+    },
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 100
+  },
+  "desiredCount": 1,
+  "enableECSManagedTags": false,
+  "launchType": "FARGATE",
+  "loadBalancers": [],
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "securityGroups": ["{{ ssm `/ecs/service-connect-cdk/client-sg-id` }}"],
+      "subnets": [
+        "{{ ssm `/ecs/service-connect-cdk/subnet-id-0` }}",
+        "{{ ssm `/ecs/service-connect-cdk/subnet-id-1` }}"
+      ]
+    }
+  },
+  "serviceConnectConfiguration": {
+    "enabled": true,
+    "namespace": "ServiceConnectNS",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "{{ ssm `/ecs/service-connect-cdk/service-connect-log-group-name` }}",
+        "awslogs-region": "ap-northeast-1",
+        "awslogs-stream-prefix": "client-nginx"
+      }
+    }
+  },
+  "placementConstraints": [],
+  "placementStrategy": [],
+  "platformVersion": "LATEST",
+  "schedulingStrategy": "REPLICA",
+  "serviceRegistries": [],
+  "enableExecuteCommand": true
+}

@@ -1,0 +1,9 @@
+region: ap-northeast-1
+cluster: ServiceConnect
+service: ClientNginx
+service_definition: ecs-service-def.json
+task_definition: ecs-task-def.json
+timeout: "5m0s"
+plugins:
+  - name: secretsmanager
+  - name: ssm
