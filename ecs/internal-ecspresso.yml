@@ -5,5 +5,4 @@ service_definition: internal-ecs-service-def.json
 task_definition: internal-ecs-task-def.json
 timeout: "5m0s"
 plugins:
-  - name: secretsmanager
   - name: ssm

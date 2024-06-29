@@ -1,14 +1,19 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import {Vpc} from "aws-cdk-lib/aws-ec2";
+import * as cdk from "aws-cdk-lib";
+import { CfnOutput, Duration, RemovalPolicy } from "aws-cdk-lib";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
+import { Repository } from "aws-cdk-lib/aws-ecr";
+import { Cluster } from "aws-cdk-lib/aws-ecs";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
-import {CfnOutput, Duration, RemovalPolicy} from "aws-cdk-lib";
-import {Cluster} from "aws-cdk-lib/aws-ecs";
-import {ManagedPolicy, PolicyDocument, Role, ServicePrincipal} from "aws-cdk-lib/aws-iam";
-import {LogGroup} from "aws-cdk-lib/aws-logs";
-import {Repository} from "aws-cdk-lib/aws-ecr";
+import {
+  ManagedPolicy,
+  PolicyDocument,
+  Role,
+  ServicePrincipal,
+} from "aws-cdk-lib/aws-iam";
+import { LogGroup } from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import type { Construct } from "constructs";
 
 export class ServiceConnectStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -18,20 +23,31 @@ export class ServiceConnectStack extends cdk.Stack {
     const vpc = new Vpc(this, "Vpc", { maxAzs: 2 });
     const subnetIdList = vpc.privateSubnets.map((obj) => obj.subnetId);
 
-    // Clientコンテナ用のセキュリティグループ
-    const clientContainerSg = new ec2.SecurityGroup(this, "ClientContainerSg", { vpc });
+    // 外部用：Clientコンテナ用のセキュリティグループ
+    const clientContainerSg = new ec2.SecurityGroup(this, "ClientContainerSg", {
+      vpc,
+    });
 
-    // Internalコンテナ用のセキュリティグループ
-    const internalContainerSg = new ec2.SecurityGroup(this, "InternalContainerSg", { vpc });
-    clientContainerSg.connections.allowTo(internalContainerSg, ec2.Port.tcp(80)); // Appコンテナからの接続は許可
+    // 内部用：Internalコンテナ用のセキュリティグループ
+    const internalContainerSg = new ec2.SecurityGroup(
+      this,
+      "InternalContainerSg",
+      { vpc },
+    );
+    // Clientコンテナからの接続は許可
+    clientContainerSg.connections.allowTo(
+      internalContainerSg,
+      ec2.Port.tcp(80),
+    );
 
     // ECSクラスタ
     new Cluster(this, "EcsCluster", {
       vpc,
       clusterName: "ServiceConnect",
+      // Service Connectを使うためには名前空間の設定が必要
       defaultCloudMapNamespace: {
         name: "ServiceConnectNS",
-      }
+      },
     });
 
     // タスクロール
@@ -48,7 +64,7 @@ export class ServiceConnectStack extends cdk.Stack {
                 "ssmmessages:CreateControlChannel",
                 "ssmmessages:CreateDataChannel",
                 "ssmmessages:OpenControlChannel",
-                "ssmmessages:OpenDataChannel"
+                "ssmmessages:OpenDataChannel",
               ],
               Resource: ["*"],
             },
@@ -65,25 +81,15 @@ export class ServiceConnectStack extends cdk.Stack {
           "AmazonEC2ContainerRegistryReadOnly",
         ),
       ],
-      inlinePolicies: {
-        inlinePolicies: PolicyDocument.fromJson({
-          Version: "2012-10-17",
-          Statement: [
-            {
-              Effect: "Allow",
-              Action: [
-                "secretsmanager:GetSecretValue",
-              ],
-              Resource: ["*"],
-            },
-          ],
-        }),
-      },
     });
 
     // ロググループ
     const logGroup = new LogGroup(this, "logGroup", {});
-    const serviceConnectLogGroup = new LogGroup(this, "ServiceConnectLogGroup", {});
+    const serviceConnectLogGroup = new LogGroup(
+      this,
+      "ServiceConnectLogGroup",
+      {},
+    );
 
     // タスク実行ロールに権限付与
     logGroup.grantWrite(taskExecRole);
